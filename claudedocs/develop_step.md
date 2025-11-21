@@ -38,19 +38,18 @@ TruthSocialCollector.collect_raw_data():
 
 ---
 
-## Step 2: 기본 로깅 추가
+## Step 2: 구조화된 로깅 추가
 
 **목적:** 실행 흐름 및 에러 추적
 
 **작업:**
-- Python 기본 logging 모듈 설정
-- 콘솔 출력 설정
-- 로그 레벨 설정 (INFO)
-- `main.py`에서 로거 사용
-- 기존 print 문을 logging으로 변경
+- structlog 사용 (requirements.txt, venv 설정)
+- `src/logger.py` 모듈 생성 (커스텀 포맷)
+- `main.py`에서 logger 사용
+- 로그 포맷: `YYYY-MM-DD HH:MM:SS [LEVEL][logger] message`
 
 **확인:**
-- 실행 시 로그 출력 확인
+- 로그 출력 확인
 
 ---
 
