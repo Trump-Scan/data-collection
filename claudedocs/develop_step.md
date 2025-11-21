@@ -60,13 +60,12 @@ TruthSocialCollector.collect_raw_data():
 **작업:**
 - `src/orchestrator.py` 생성
 - Orchestrator 클래스 정의
-- Collector 등록 리스트 관리
+  - 생성자에서 collectors 리스트 받아서 초기화
+  - 등록된 Collector 로깅
 - `main.py`에서 Orchestrator 인스턴스 생성
-- 로그 추가
 
 **확인:**
-- `main.py`에서 Orchestrator 생성 가능
-- 로그로 Orchestrator 초기화 확인
+- Orchestrator 초기화 로그 확인
 
 ---
 
