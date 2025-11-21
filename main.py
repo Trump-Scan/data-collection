@@ -6,6 +6,7 @@
 from src.logger import setup_logging, get_logger
 from src.orchestrator import Orchestrator
 from src.collectors.dummy import DummyCollector
+from src.collectors.truth_social import TruthSocialCollector
 
 
 def main():
@@ -19,7 +20,7 @@ def main():
     # Collector 등록
     collectors = [
         DummyCollector(),
-        # TruthSocialCollector(),  # TODO: Step 5에서 추가
+        TruthSocialCollector(),
         # NewsCollector(),  # TODO: 향후 추가
     ]
 
