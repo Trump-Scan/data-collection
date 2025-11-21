@@ -1,2 +1,5 @@
 # 구조화된 로깅
 structlog>=23.0.0
+
+# Redis 클라이언트
+redis>=5.0.0

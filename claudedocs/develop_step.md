@@ -7,20 +7,24 @@
 ## 데이터 흐름
 
 ```
-main.py 
+main.py
   ↓
-Orchestrator 
+인프라 컴포넌트 생성 (StateStore, Database, MessageQueue)
   ↓
-BaseCollector.collect() [Template Method]
-  ├─ State Store에서 Checkpoint 조회
-  ├─ collect_raw_data(checkpoint) 호출 ← TruthSocialCollector가 구현
-  ├─ Database에 저장
-  ├─ Message Queue 발행
-  └─ State Store에 Checkpoint 저장
-  
-TruthSocialCollector.collect_raw_data():
-  ├─ API 호출 (RSS 피드)
-  └─ 데이터 파싱
+Orchestrator(collectors, state_store, database, message_queue)
+  ↓
+Orchestrator.run()
+  ├─ 각 Collector에 대해:
+  │   1. StateStore.get_checkpoint(channel_name)
+  │   2. collector.collect_raw_data(checkpoint) 호출
+  │   3. Database.save_raw_data(collected_data)
+  │   4. MessageQueue.publish(collected_data)
+  │   5. StateStore.save_checkpoint(channel_name, new_checkpoint)
+
+TruthSocialCollector.collect_raw_data(checkpoint):
+  ├─ RSS 피드 API 호출
+  ├─ 데이터 파싱
+  └─ checkpoint 이후 데이터 필터링 및 반환
 ```
 
 ---
@@ -69,14 +73,14 @@ TruthSocialCollector.collect_raw_data():
 
 ---
 
-## Step 4: BaseCollector 골격 (Template Method)
+## Step 4: BaseCollector 인터페이스
 
-**목적:** 모든 Collector가 따라야 할 공통 흐름 정의
+**목적:** 모든 Collector가 따라야 할 공통 인터페이스 정의
 
 **작업:**
 - `src/collectors/base.py` 생성
-- BaseCollector 추상 클래스 정의
-  - `collect()` Template Method (로그만 출력)
+- BaseCollector 인터페이스 정의
+  - 책임: 데이터 수집만 담당
   - `collect_raw_data(checkpoint)` 추상 메서드
   - `get_channel_name()` 추상 메서드
 - `src/collectors/dummy.py` 생성 (테스트용)
@@ -97,13 +101,10 @@ TruthSocialCollector.collect_raw_data():
 - TruthSocialCollector 클래스 정의 (BaseCollector 상속)
 - `collect_raw_data(checkpoint)` 빈 구현 (빈 리스트 반환)
 - `get_channel_name()` 구현 ("truth_social" 반환)
-- Orchestrator에 Collector 인스턴스 등록 (state_store=None 등으로 전달)
-- 로그 추가
+- `main.py`에서 Orchestrator에 등록
 
 **확인:**
-- TruthSocialCollector 인스턴스 생성 가능
-- Orchestrator에서 Collector 참조 가능
-- `collect()` 호출 시 로그 출력 확인
+- TruthSocialCollector가 Orchestrator를 통해 실행되는지 확인
 
 ---
 
@@ -114,14 +115,15 @@ TruthSocialCollector.collect_raw_data():
 **작업:**
 - `src/infrastructure/state_store.py` 생성
 - StateStore 클래스 정의
-- Redis 연결 설정
-- `get_checkpoint(channel_name)` 메서드 구현
-- `save_checkpoint(channel_name, checkpoint)` 메서드 구현
-- 로그 추가
-- `requirements.txt` 생성 및 redis 라이브러리 추가
+  - Redis 연결 및 연결 테스트
+  - `get_checkpoint(channel_name)` 메서드 구현
+  - `save_checkpoint(channel_name, checkpoint)` 메서드 구현
+- `requirements.txt`에 redis 추가
+- `main.py`에서 StateStore 생성하여 Orchestrator에 주입
 
 **확인:**
 - Redis 연결 성공
+- Orchestrator가 StateStore를 사용하여 checkpoint 조회하는지 확인
 - Checkpoint 저장/조회 동작 확인
 
 ---

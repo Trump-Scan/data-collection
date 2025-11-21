@@ -1,7 +1,7 @@
 """
-BaseCollector: 모든 Collector의 기본 클래스
+BaseCollector: Collector 인터페이스
 
-Template Method 패턴을 사용하여 수집 흐름을 정의합니다.
+각 채널에서 데이터를 수집하는 인터페이스를 정의합니다.
 """
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional
@@ -10,45 +10,16 @@ from src.logger import get_logger
 
 class BaseCollector(ABC):
     """
-    모든 Collector가 상속해야 하는 추상 기본 클래스
+    Collector 인터페이스
 
-    Template Method 패턴:
-    - collect(): 전체 수집 흐름을 제어하는 템플릿 메서드 (구체 메서드)
-    - collect_raw_data(): 각 Collector가 구현해야 하는 실제 수집 로직 (추상 메서드)
+    책임: 특정 채널에서 데이터 수집만 담당
+    - collect_raw_data(): 실제 데이터 수집 로직 (추상 메서드)
     - get_channel_name(): 채널 이름 반환 (추상 메서드)
     """
 
-    def __init__(self, state_store=None, database=None, message_queue=None):
-        """
-        BaseCollector 초기화
-
-        Args:
-            state_store: Checkpoint 저장/조회 인프라
-            database: 원본 데이터 저장 인프라
-            message_queue: 메시지 발행 인프라
-        """
-        self.state_store = state_store
-        self.database = database
-        self.message_queue = message_queue
+    def __init__(self):
+        """BaseCollector 초기화"""
         self.logger = get_logger(self.__class__.__name__)
-
-    def collect(self):
-        """
-        전체 수집 흐름을 제어하는 Template Method
-
-        흐름:
-        1. Checkpoint 조회
-        2. collect_raw_data() 호출 (하위 클래스 구현)
-        3. 데이터 저장 (Database)
-        4. 메시지 발행 (Message Queue)
-        5. Checkpoint 저장
-        """
-        channel_name = self.get_channel_name()
-        self.logger.info("수집 시작", channel=channel_name)
-
-        # TODO: Step 10에서 실제 구현 예정
-        # 지금은 로그만 출력
-        self.logger.info("수집 완료", channel=channel_name, collected_count=0)
 
     @abstractmethod
     def collect_raw_data(self, checkpoint: Optional[str]) -> List[Dict[str, Any]]:

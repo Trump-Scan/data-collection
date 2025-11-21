@@ -29,7 +29,14 @@
 
 ### 처리 흐름
 ```
-채널 모니터링 → 새 데이터 감지 → 구조화 → 원본 저장 → Checkpoint 업데이트 → 메시지 발행
+Orchestrator
+  ↓
+각 Collector에 대해:
+  1. Checkpoint 조회 (StateStore)
+  2. collect_raw_data(checkpoint) 호출
+  3. 원본 저장 (Database)
+  4. 메시지 발행 (MessageQueue)
+  5. Checkpoint 저장 (StateStore)
 ```
 
 ---
@@ -62,8 +69,9 @@ data-collection/
 ### 주요 컴포넌트 설명
 
 #### `collectors/base.py`
-- 모든 Collector가 구현해야 하는 추상 클래스
-- 공통 인터페이스 정의: `collect()`, `get_checkpoint()`, `save_checkpoint()`
+- Collector 인터페이스
+- 책임: 데이터 수집만 담당
+- 공통 인터페이스: `collect_raw_data(checkpoint)`, `get_channel_name()`
 
 #### `collectors/truth_social.py`
 - Truth Social RSS 피드 수집 구현
@@ -75,9 +83,11 @@ data-collection/
 - Database: 원본 데이터 저장 (Oracle)
 
 #### `orchestrator.py`
-- 여러 Collector 등록 및 관리
+- 책임: 전체 수집 흐름 조율
+- Collector 관리
+- 인프라 컴포넌트 관리 (StateStore, Database, MessageQueue)
+- Checkpoint 조회 → 수집 → 저장 → 발행 → Checkpoint 저장 흐름 제어
 - 주기적 실행 스케줄링 (APScheduler)
-- 전체 상태 모니터링
 
 ---
 

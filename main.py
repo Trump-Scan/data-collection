@@ -7,6 +7,7 @@ from src.logger import setup_logging, get_logger
 from src.orchestrator import Orchestrator
 from src.collectors.dummy import DummyCollector
 from src.collectors.truth_social import TruthSocialCollector
+from src.infrastructure.state_store import StateStore
 
 
 def main():
@@ -17,6 +18,11 @@ def main():
 
     logger.info("Data Collection Layer Started")
 
+    # 인프라 컴포넌트 생성
+    state_store = StateStore()
+    # database = Database()  # TODO: Step 8에서 추가
+    # message_queue = MessageQueue()  # TODO: Step 9에서 추가
+
     # Collector 등록
     collectors = [
         DummyCollector(),
@@ -25,7 +31,12 @@ def main():
     ]
 
     # Orchestrator 생성 및 실행
-    orchestrator = Orchestrator(collectors=collectors)
+    orchestrator = Orchestrator(
+        collectors=collectors,
+        state_store=state_store,
+        # database=database,  # TODO: Step 8에서 추가
+        # message_queue=message_queue,  # TODO: Step 9에서 추가
+    )
     orchestrator.run()
 
 
