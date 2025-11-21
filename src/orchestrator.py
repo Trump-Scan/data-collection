@@ -26,3 +26,22 @@ class Orchestrator:
             self.logger.info("Collector 등록", collector=collector_name)
 
         self.logger.info("Orchestrator 초기화 완료", collectors_count=len(self.collectors))
+
+    def run(self):
+        """
+        등록된 모든 Collector의 수집 작업 실행
+
+        각 Collector의 collect() 메서드를 순차적으로 호출합니다.
+        """
+        self.logger.info("수집 작업 시작", collectors_count=len(self.collectors))
+
+        for collector in self.collectors:
+            collector_name = collector.__class__.__name__
+            try:
+                self.logger.info("Collector 실행 시작", collector=collector_name)
+                collector.collect()
+                self.logger.info("Collector 실행 완료", collector=collector_name)
+            except Exception as e:
+                self.logger.error("Collector 실행 실패", collector=collector_name, error=str(e))
+
+        self.logger.info("수집 작업 완료")

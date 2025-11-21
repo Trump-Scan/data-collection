@@ -61,11 +61,11 @@ TruthSocialCollector.collect_raw_data():
 - `src/orchestrator.py` 생성
 - Orchestrator 클래스 정의
   - 생성자에서 collectors 리스트 받아서 초기화
-  - 등록된 Collector 로깅
-- `main.py`에서 Orchestrator 인스턴스 생성
+  - `run()` 메서드: 등록된 Collector의 collect() 호출
+- `main.py`에서 collectors 변수로 관리
 
 **확인:**
-- Orchestrator 초기화 로그 확인
+- Orchestrator 초기화 및 실행 로그 확인
 
 ---
 
@@ -75,19 +75,16 @@ TruthSocialCollector.collect_raw_data():
 
 **작업:**
 - `src/collectors/base.py` 생성
-- ABC를 사용한 추상 클래스 정의
-- 생성자에서 state_store, database, message_queue 받기 (아직 None)
-- `collect()` 메서드 골격 정의 (구체 메서드)
-  - 전체 수집 흐름을 제어할 Template Method
-  - 아직은 로그만 출력하는 수준
-- `collect_raw_data(checkpoint)` 추상 메서드 정의
-  - 각 Collector가 구현할 실제 수집 로직
-- `get_channel_name()` 추상 메서드 정의
-- 로그 추가
+- BaseCollector 추상 클래스 정의
+  - `collect()` Template Method (로그만 출력)
+  - `collect_raw_data(checkpoint)` 추상 메서드
+  - `get_channel_name()` 추상 메서드
+- `src/collectors/dummy.py` 생성 (테스트용)
+  - DummyCollector 구현
+- `main.py`에서 DummyCollector 테스트
 
 **확인:**
-- BaseCollector 임포트 가능
-- 추상 메서드 정의 확인
+- DummyCollector가 Orchestrator를 통해 실행되는지 확인
 
 ---
 

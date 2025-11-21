@@ -5,6 +5,7 @@
 """
 from src.logger import setup_logging, get_logger
 from src.orchestrator import Orchestrator
+from src.collectors.dummy import DummyCollector
 
 
 def main():
@@ -15,8 +16,16 @@ def main():
 
     logger.info("Data Collection Layer Started")
 
-    # Orchestrator 생성
-    orchestrator = Orchestrator()
+    # Collector 등록
+    collectors = [
+        DummyCollector(),
+        # TruthSocialCollector(),  # TODO: Step 5에서 추가
+        # NewsCollector(),  # TODO: 향후 추가
+    ]
+
+    # Orchestrator 생성 및 실행
+    orchestrator = Orchestrator(collectors=collectors)
+    orchestrator.run()
 
 
 if __name__ == "__main__":
