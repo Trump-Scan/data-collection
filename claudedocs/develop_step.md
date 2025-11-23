@@ -133,23 +133,31 @@ TruthSocialCollector.collect_raw_data(checkpoint):
 **목적:** Truth Social RSS 데이터 실제 수집
 
 **작업:**
-- `TruthSocialCollector.collect_raw_data(checkpoint)` 메서드 실제 구현
-- httpx를 사용한 RSS 피드 API 호출
-- feedparser를 사용한 RSS 파싱
-- checkpoint 이후 데이터만 필터링 (간단한 시간 비교)
-- 수집된 데이터를 구조화 (딕셔너리 리스트)
-- 로그 추가
-- `requirements.txt`에 httpx, feedparser, pytest 추가
-- **테스트 작성**: `tests/test_truth_social_collector.py` 생성
-  - `collect_raw_data()` 단위 테스트
-  - HTTP 응답 mock 사용
-  - 파싱 결과 검증
+- `src/models/channel.py` 생성 (Channel enum)
+  - TRUTH_SOCIAL, DUMMY 등 채널 정의
+- `src/models/raw_data.py` 생성 (Pydantic 모델)
+  - content: str
+  - link: str
+  - published_at: datetime (datetime 객체)
+  - channel: Channel (Channel enum)
+- `BaseCollector.collect_raw_data()` 시그니처 변경
+  - checkpoint: Optional[datetime] (datetime 객체)
+  - 반환: List[RawData]
+- `StateStore` 수정
+  - get_checkpoint: datetime 반환 (Redis에서 ISO format 문자열 파싱)
+  - save_checkpoint: datetime 받음 (ISO format 문자열로 변환하여 저장)
+- `TruthSocialCollector.collect_raw_data()` 실제 구현
+  - httpx로 RSS 피드 호출 (https://trumpstruth.org/feed)
+  - feedparser로 RSS 파싱
+  - checkpoint와 published_at을 datetime으로 직접 비교
+  - RawData 모델로 구조화
+- `requirements.txt`에 httpx, feedparser, pydantic, pytest 추가
+- 테스트 작성 (`tests/test_truth_social_collector.py`)
+  - 실제 RSS 피드 호출 테스트
 
 **확인:**
 - RSS 피드 호출 성공
-- 파싱된 데이터 구조 확인
-- 로그로 수집된 항목 수 확인
-- **테스트 실행**: `pytest tests/test_truth_social_collector.py`
+- checkpoint가 datetime으로 관리되는지 확인
 - 테스트 통과 확인
 
 ---
@@ -273,24 +281,7 @@ TruthSocialCollector.collect_raw_data(checkpoint):
 
 ---
 
-## Step 14: 데이터 검증
-
-**목적:** 수집/파싱된 데이터의 품질 보장
-
-**작업:**
-- Pydantic 모델 정의 (RawData)
-- 필수 필드 검증 (content, channel, published_at 등)
-- TruthSocialCollector에서 데이터 검증 추가
-- 검증 실패 시 로그 남기고 스킵
-- `requirements.txt`에 pydantic 추가
-
-**확인:**
-- 올바른 데이터만 반환됨
-- 잘못된 데이터는 로그에 기록되고 스킵
-
----
-
-## Step 15: 에러 처리 및 재시도
+## Step 14: 에러 처리 및 재시도
 
 **목적:** 일시적 오류 대응
 
@@ -324,7 +315,7 @@ TruthSocialCollector.collect_raw_data(checkpoint):
 
 ## 다음 단계
 
-Step 15 완료 후:
+Step 14 완료 후:
 - News Collector 추가 (동일한 패턴으로 개발)
 - 성능 모니터링 추가
 - 문서 업데이트

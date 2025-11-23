@@ -3,3 +3,16 @@ structlog>=23.0.0
 
 # Redis 클라이언트
 redis>=5.0.0
+
+# HTTP 클라이언트
+httpx>=0.24.0
+
+# RSS 파싱
+feedparser>=6.0.0
+
+# 데이터 검증 및 모델
+pydantic>=2.0.0
+
+# 테스팅
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
