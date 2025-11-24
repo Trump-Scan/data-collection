@@ -206,50 +206,7 @@ TruthSocialCollector.collect_raw_data(checkpoint):
 
 ---
 
-## Step 10: BaseCollector Template Method 완성
-
-**목적:** 전체 수집 흐름 통합
-
-**작업:**
-- BaseCollector의 `collect()` 메서드 완성
-  1. state_store.get_checkpoint(channel_name) 호출
-  2. collect_raw_data(checkpoint) 호출
-  3. 수집된 데이터가 있으면:
-     - database.save_raw_data() 호출
-     - message_queue.publish() 호출
-     - state_store.save_checkpoint() 호출
-  4. 수집 결과 로그 출력
-- Orchestrator에서 Collector 생성 시 state_store, database, message_queue 주입
-- 로그 추가
-
-**확인:**
-- `collect()` 호출 시 전체 흐름 동작
-- DB에 데이터 저장 확인
-- Redis Streams에 메시지 발행 확인
-- Checkpoint 저장 확인
-
----
-
-## Step 11: Orchestrator와 Collector 연결
-
-**목적:** Orchestrator가 실제로 Collector 실행
-
-**작업:**
-- StateStore, Database, MessageQueue 인스턴스를 Orchestrator에서 생성
-- Collector 생성 시 인프라 컴포넌트 주입
-- Orchestrator에 `run()` 메서드 구현
-  - 등록된 Collector의 `collect()` 호출
-  - 에러 처리 (try-except)
-- `main.py`에서 `orchestrator.run()` 호출
-- 로그 추가
-
-**확인:**
-- `python main.py` 실행 시 전체 수집 프로세스 동작
-- 데이터가 수집되어 DB에 저장되고 메시지 발행됨
-
----
-
-## Step 12: 스케줄링 추가
+## Step 10: 스케줄링 추가
 
 **목적:** 주기적으로 자동 수집
 
@@ -268,25 +225,7 @@ TruthSocialCollector.collect_raw_data(checkpoint):
 
 ---
 
-## Step 13: 설정 관리
-
-**목적:** 하드코딩된 값을 설정으로 분리
-
-**작업:**
-- `src/config.py` 생성
-- 환경 변수에서 값 로드
-- Redis, Oracle, 수집 주기 등 설정 항목 정의
-- 각 모듈에서 config import하여 사용
-- `.env.example` 파일 생성
-- `requirements.txt`에 python-dotenv 추가
-
-**확인:**
-- 환경 변수 변경 시 코드 수정 없이 동작 변경 가능
-- 로그에 사용 중인 설정 값 출력
-
----
-
-## Step 14: 에러 처리 및 재시도
+## Step 11: 에러 처리 및 재시도
 
 **목적:** 일시적 오류 대응
 
@@ -320,7 +259,7 @@ TruthSocialCollector.collect_raw_data(checkpoint):
 
 ## 다음 단계
 
-Step 14 완료 후:
+Step 11 완료 후:
 - News Collector 추가 (동일한 패턴으로 개발)
 - 성능 모니터링 추가
 - 문서 업데이트

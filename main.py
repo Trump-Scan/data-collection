@@ -3,6 +3,8 @@
 
 트럼프 대통령 발언을 여러 채널에서 수집하는 애플리케이션의 시작점입니다.
 """
+import signal
+import sys
 from src.logger import setup_logging, get_logger
 from src.orchestrator import Orchestrator
 from src.collectors.truth_social import TruthSocialCollector
@@ -30,14 +32,26 @@ def main():
         # NewsCollector(),  # TODO: 향후 추가
     ]
 
-    # Orchestrator 생성 및 실행
+    # Orchestrator 생성
     orchestrator = Orchestrator(
         collectors=collectors,
         state_store=state_store,
         database=database,
         message_queue=message_queue,
     )
-    orchestrator.run()
+
+    # 시그널 핸들러 등록 (우아한 종료)
+    def signal_handler(sig, frame):
+        logger.info("종료 시그널 수신, 우아하게 종료합니다...")
+        orchestrator.shutdown()
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+
+    # 스케줄러 시작
+    logger.info("스케줄러 시작")
+    orchestrator.start()
 
 
 if __name__ == "__main__":

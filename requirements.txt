@@ -22,3 +22,6 @@ oracledb>=2.0.0
 # 테스팅
 pytest>=7.0.0
 pytest-asyncio>=0.21.0
+
+# 스케줄링
+APScheduler>=3.10.0

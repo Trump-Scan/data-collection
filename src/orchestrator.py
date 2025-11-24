@@ -4,7 +4,9 @@ Orchestrator: Collector 조율자
 여러 Collector를 등록하고 관리하며, 전체 수집 흐름을 조율합니다.
 """
 from typing import List
+from apscheduler.schedulers.blocking import BlockingScheduler
 from src.logger import get_logger
+from config.scheduler import SCHEDULER_CONFIG
 
 
 class Orchestrator:
@@ -31,6 +33,7 @@ class Orchestrator:
         self.state_store = state_store
         self.database = database
         self.message_queue = message_queue
+        self.scheduler = BlockingScheduler()
 
         # 등록된 Collector 로깅
         for collector in self.collectors:
@@ -91,3 +94,40 @@ class Orchestrator:
                 self.logger.error("Collector 실행 실패", channel=channel, error=str(e))
 
         self.logger.info("수집 작업 완료")
+
+    def start(self):
+        """
+        스케줄러 시작 및 주기적 수집 실행
+
+        5분마다 수집 작업을 실행합니다.
+        """
+        # 즉시 한 번 실행
+        self.logger.info("초기 수집 작업 실행")
+        self.run()
+
+        # 스케줄 등록 (설정 파일 사용)
+        self.scheduler.add_job(
+            func=self.run,
+            trigger=SCHEDULER_CONFIG['trigger'],
+            minutes=SCHEDULER_CONFIG['minutes'],
+            id=SCHEDULER_CONFIG['id'],
+            name=SCHEDULER_CONFIG['name']
+        )
+
+        self.logger.info(
+            "스케줄러 시작됨",
+            interval_minutes=SCHEDULER_CONFIG['minutes'],
+            job_name=SCHEDULER_CONFIG['name']
+        )
+
+        try:
+            self.scheduler.start()
+        except (KeyboardInterrupt, SystemExit):
+            self.logger.info("스케줄러 종료")
+
+    def shutdown(self):
+        """스케줄러 우아한 종료"""
+        self.logger.info("스케줄러 종료 중...")
+        if self.scheduler.running:
+            self.scheduler.shutdown(wait=True)
+        self.logger.info("스케줄러 종료 완료")
