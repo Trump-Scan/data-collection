@@ -13,6 +13,9 @@ feedparser>=6.0.0
 # 데이터 검증 및 모델
 pydantic>=2.0.0
 
+# 데이터베이스
+oracledb>=2.0.0
+
 # 테스팅
 pytest>=7.0.0
 pytest-asyncio>=0.21.0

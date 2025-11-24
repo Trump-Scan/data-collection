@@ -19,6 +19,10 @@ __pycache__/
 # Environment variables
 .env
 
+# Configuration files with sensitive data
+config/database.py
+config/redis.py
+
 # Logs
 *.log
 

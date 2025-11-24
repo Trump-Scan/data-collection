@@ -8,22 +8,30 @@ from datetime import datetime
 import redis
 from src.logger import get_logger
 from src.models.channel import Channel
+from config.redis import REDIS_CONFIG
 
 
 class StateStore:
     """Checkpoint 관리 클래스"""
 
-    def __init__(self, host: str = "localhost", port: int = 6379, db: int = 0):
-        """
-        StateStore 초기화
-
-        Args:
-            host: Redis 호스트
-            port: Redis 포트
-            db: Redis 데이터베이스 번호
-        """
+    def __init__(self):
+        """StateStore 초기화"""
         self.logger = get_logger(__name__)
-        self.redis_client = redis.Redis(host=host, port=port, db=db, decode_responses=True)
+
+        # Redis 설정 로드
+        host = REDIS_CONFIG["host"]
+        port = REDIS_CONFIG["port"]
+        db = REDIS_CONFIG["db"]
+        password = REDIS_CONFIG.get("password")  # 선택적
+
+        # Redis 클라이언트 생성
+        self.redis_client = redis.Redis(
+            host=host,
+            port=port,
+            db=db,
+            password=password,
+            decode_responses=True
+        )
 
         # 연결 테스트
         try:
