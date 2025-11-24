@@ -10,6 +10,9 @@ httpx>=0.24.0
 # RSS 파싱
 feedparser>=6.0.0
 
+# HTML 파싱
+beautifulsoup4>=4.12.0
+
 # 데이터 검증 및 모델
 pydantic>=2.0.0
 

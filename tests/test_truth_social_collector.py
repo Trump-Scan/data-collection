@@ -20,6 +20,12 @@ class TestTruthSocialCollector:
         assert collector.get_channel() == Channel.TRUTH_SOCIAL
         assert collector.get_channel().value == "truth_social"
 
+
+    def test_collect_raw_data(self, collector):
+        result = collector.collect_raw_data(checkpoint=None)
+        for item in result:
+            print(item.content + "\n")
+
     def test_collect_raw_data_no_checkpoint(self, collector):
         """checkpoint 없이 실제 RSS 피드 수집 테스트"""
         result = collector.collect_raw_data(checkpoint=None)

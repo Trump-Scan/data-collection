@@ -5,8 +5,10 @@ Trump's Truth Social 플랫폼에서 발언을 수집합니다.
 """
 from typing import List, Optional
 from datetime import datetime
+import re
 import httpx
 import feedparser
+from bs4 import BeautifulSoup
 from src.collectors.base import BaseCollector
 from src.models.channel import Channel
 from src.models.raw_data import RawData
@@ -58,9 +60,18 @@ class TruthSocialCollector(BaseCollector):
                 if checkpoint and published_dt <= checkpoint:
                     continue
 
+                # HTML 태그 제거 (한 번만 수행)
+                raw_content = entry.get('summary', '')
+                cleaned_content = self._clean_html(raw_content)
+
+                # 정리된 content 유효성 검사
+                if not self._is_valid_content(cleaned_content):
+                    self.logger.debug("유효하지 않은 content", link=entry.get('link', ''))
+                    continue
+
                 # 데이터 구조화
                 raw_data = RawData(
-                    content=entry.get('summary', ''),
+                    content=cleaned_content,
                     link=entry.get('link', ''),
                     published_at=published_dt,
                     channel=self.get_channel(),
@@ -79,6 +90,59 @@ class TruthSocialCollector(BaseCollector):
         except Exception as e:
             self.logger.error("데이터 수집 중 예외 발생", error=str(e), error_type=type(e).__name__)
             return []
+
+    def _clean_html(self, html_content: str) -> str:
+        """
+        HTML 태그 제거 및 텍스트 추출
+
+        Args:
+            html_content: HTML이 포함된 문자열
+
+        Returns:
+            HTML 태그가 제거된 순수 텍스트
+        """
+        if not html_content:
+            return ""
+
+        # BeautifulSoup으로 HTML 파싱
+        soup = BeautifulSoup(html_content, 'html.parser')
+
+        # 모든 텍스트 추출
+        text = soup.get_text(separator=' ', strip=True)
+
+        # 연속된 공백을 하나로
+        text = re.sub(r'\s+', ' ', text)
+
+        return text.strip()
+
+    def _is_valid_content(self, cleaned_content: str) -> bool:
+        """
+        정리된 content가 유효한지 검사 (비어있거나 의미없는 내용 제외)
+
+        Args:
+            cleaned_content: HTML이 이미 제거된 content 문자열
+
+        Returns:
+            유효하면 True, 아니면 False
+        """
+        if not cleaned_content or cleaned_content.strip() == "":
+            return False
+
+        # 텍스트가 너무 짧으면 제외
+        if len(cleaned_content) < 10:
+            return False
+
+        # RT로 시작하는 리트윗 제외 (RT, RT:, RT @username 등)
+        content_stripped = cleaned_content.strip()
+        if content_stripped == "RT" or content_stripped.startswith("RT:") or content_stripped.startswith("RT @"):
+            return False
+
+        # URL만 있는 경우 제외 (http:// 또는 https://로 시작하는 경우)
+        content_stripped = cleaned_content.strip()
+        if content_stripped.startswith("http://") or content_stripped.startswith("https://"):
+            return False
+
+        return True
 
     def _parse_published_date(self, entry) -> Optional[datetime]:
         """
