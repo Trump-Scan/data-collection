@@ -168,13 +168,18 @@ TruthSocialCollector.collect_raw_data(checkpoint):
 
 **작업:**
 - `src/infrastructure/database.py` 생성
-- Database 클래스 정의
-- Oracle DB 연결 설정
-- `save_raw_data(raw_data_list)` 메서드 구현
-  - `raw_data` 테이블에 INSERT
-  - ID 생성 및 반환
-- 로그 추가
+  - Database 클래스 정의
+  - Oracle Autonomous Database 연결 (wallet 인증)
+  - `save_raw_data(raw_data: RawData) -> RawData` 메서드 구현
+    - `raw_data` 테이블에 INSERT
+    - RETURNING으로 생성된 ID 받아서 RawData.id에 할당
+- `src/models/raw_data.py` 수정
+  - `id: Optional[int]` 필드 추가
+- `config/database.py` 생성 및 `.gitignore`에 추가
+- `sql/ddl.sql` 생성
 - `requirements.txt`에 oracledb 추가
+- Orchestrator에서 건별 Database 저장
+- `main.py`에서 Database 인스턴스 생성 및 전달
 
 **확인:**
 - DB 연결 성공

@@ -4,7 +4,7 @@ StateStore: Checkpoint 저장/조회
 Redis를 사용하여 각 Collector의 마지막 수집 위치(Checkpoint)를 관리합니다.
 """
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone
 import redis
 from src.logger import get_logger
 from src.models.channel import Channel
@@ -72,8 +72,13 @@ class StateStore:
 
         Args:
             channel: 채널
-            checkpoint: 저장할 Checkpoint datetime
+            checkpoint: 저장할 Checkpoint datetime (timezone-aware여야 함)
         """
+        # timezone-naive인 경우 UTC로 설정 (방어 코드)
+        if checkpoint.tzinfo is None:
+            checkpoint = checkpoint.replace(tzinfo=timezone.utc)
+            self.logger.warning("Checkpoint에 timezone이 없어 UTC로 설정", channel=channel)
+
         key = f"checkpoint:{channel}"
         checkpoint_str = checkpoint.isoformat()
         self.redis_client.set(key, checkpoint_str)

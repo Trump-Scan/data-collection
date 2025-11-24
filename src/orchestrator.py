@@ -59,9 +59,7 @@ class Orchestrator:
                 self.logger.info("Collector 실행 시작", channel=channel)
 
                 # 1. Checkpoint 조회
-                checkpoint = None
-                if self.state_store:
-                    checkpoint = self.state_store.get_checkpoint(channel)
+                checkpoint = self.state_store.get_checkpoint(channel)
 
                 # 2. 데이터 수집
                 collected_data = collector.collect_raw_data(checkpoint)
@@ -70,18 +68,20 @@ class Orchestrator:
                 if collected_data:
                     self.logger.info("수집된 데이터 있음", channel=channel, count=len(collected_data))
 
-                    # TODO: Step 8에서 Database 저장 구현
-                    # if self.database:
-                    #     self.database.save_raw_data(collected_data)
+                    # 3-1. 건별로 Database 저장 및 Message Queue 발행
+                    for raw_data in collected_data:
+                        # Database 저장 (ID 할당됨)
+                        saved_data = self.database.save_raw_data(raw_data)
 
-                    # TODO: Step 9에서 Message Queue 발행 구현
-                    # if self.message_queue:
-                    #     self.message_queue.publish(collected_data)
+                        # TODO: Step 9에서 Message Queue 발행 구현
+                        # self.message_queue.publish(saved_data)
 
-                    # TODO: Step 10에서 Checkpoint 저장 구현
-                    # if self.state_store:
-                    #     new_checkpoint = collected_data[-1]['timestamp']
-                    #     self.state_store.save_checkpoint(channel, new_checkpoint)
+                    self.logger.info("Database 저장 완료", channel=channel, count=len(collected_data))
+
+                    # 3-2. Checkpoint 저장 (가장 최근 데이터의 published_at)
+                    new_checkpoint = max(data.published_at for data in collected_data)
+                    self.state_store.save_checkpoint(channel, new_checkpoint)
+                    self.logger.info("Checkpoint 저장 완료", channel=channel, checkpoint=new_checkpoint)
                 else:
                     self.logger.info("수집된 데이터 없음", channel=channel)
 

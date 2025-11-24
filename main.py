@@ -5,7 +5,6 @@
 """
 from src.logger import setup_logging, get_logger
 from src.orchestrator import Orchestrator
-from src.collectors.dummy import DummyCollector
 from src.collectors.truth_social import TruthSocialCollector
 from src.infrastructure.state_store import StateStore
 from src.infrastructure.database import Database
@@ -26,7 +25,6 @@ def main():
 
     # Collector 등록
     collectors = [
-        DummyCollector(),
         TruthSocialCollector(),
         # NewsCollector(),  # TODO: 향후 추가
     ]
@@ -35,7 +33,7 @@ def main():
     orchestrator = Orchestrator(
         collectors=collectors,
         state_store=state_store,
-        # database=database,  # TODO: Step 8에서 추가
+        database=database,
         # message_queue=message_queue,  # TODO: Step 9에서 추가
     )
     orchestrator.run()
