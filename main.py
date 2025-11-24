@@ -8,6 +8,7 @@ from src.orchestrator import Orchestrator
 from src.collectors.truth_social import TruthSocialCollector
 from src.infrastructure.state_store import StateStore
 from src.infrastructure.database import Database
+from src.infrastructure.message_queue import MessageQueue
 
 
 def main():
@@ -21,7 +22,7 @@ def main():
     # 인프라 컴포넌트 생성
     state_store = StateStore()
     database = Database()
-    # message_queue = MessageQueue()  # TODO: Step 9에서 추가
+    message_queue = MessageQueue()
 
     # Collector 등록
     collectors = [
@@ -34,7 +35,7 @@ def main():
         collectors=collectors,
         state_store=state_store,
         database=database,
-        # message_queue=message_queue,  # TODO: Step 9에서 추가
+        message_queue=message_queue,
     )
     orchestrator.run()
 

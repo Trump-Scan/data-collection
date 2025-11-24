@@ -73,10 +73,10 @@ class Orchestrator:
                         # Database 저장 (ID 할당됨)
                         saved_data = self.database.save_raw_data(raw_data)
 
-                        # TODO: Step 9에서 Message Queue 발행 구현
-                        # self.message_queue.publish(saved_data)
+                        # Message Queue 발행
+                        self.message_queue.publish(saved_data)
 
-                    self.logger.info("Database 저장 완료", channel=channel, count=len(collected_data))
+                    self.logger.info("Database 저장 및 Message Queue 발행 완료", channel=channel, count=len(collected_data))
 
                     # 3-2. Checkpoint 저장 (가장 최근 데이터의 published_at)
                     new_checkpoint = max(data.published_at for data in collected_data)

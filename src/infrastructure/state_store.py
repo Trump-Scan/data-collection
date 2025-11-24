@@ -22,14 +22,12 @@ class StateStore:
         host = REDIS_CONFIG["host"]
         port = REDIS_CONFIG["port"]
         db = REDIS_CONFIG["db"]
-        password = REDIS_CONFIG.get("password")  # 선택적
 
         # Redis 클라이언트 생성
         self.redis_client = redis.Redis(
             host=host,
             port=port,
             db=db,
-            password=password,
             decode_responses=True
         )
 
