@@ -23,6 +23,9 @@ def setup_logging(level: str = "INFO"):
         level=getattr(logging, level.upper())
     )
 
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("httpcore").setLevel(logging.WARNING)
+
     # 커스텀 포맷터 정의
     class CustomConsoleRenderer:
         """커스텀 로그 포맷: YYYY-MM-DD HH:MM:SS [level][logger] message"""
