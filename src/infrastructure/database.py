@@ -4,6 +4,8 @@ Oracle Database 연결 관리
 Trump Scan 프로젝트의 Oracle DB 연결을 관리합니다.
 """
 from datetime import datetime, timezone, timedelta
+from typing import Optional
+
 import oracledb
 from src.logger import get_logger
 from src.models.raw_data import RawData
@@ -151,9 +153,12 @@ class Database:
         finally:
             connection.close()  # pool에 반환
 
-    def get_latest_raw_data(self) -> RawData:
+    def get_latest_raw_data(self, id: Optional[int] = None) -> RawData:
         """
-        가장 최근 raw_data 1건 조회
+        raw_data 조회
+
+        Args:
+            id: raw_data의 id. 없으면 가장 최근 1건 조회
 
         Returns:
             RawData 또는 None (데이터 없는 경우)
@@ -166,19 +171,32 @@ class Database:
             cursor = connection.cursor()
 
             # TO_CHAR로 타임존 포함 ISO 8601 형식으로 변환
-            query = f"""
-                SELECT
-                    id,
-                    content,
-                    link,
-                    {_to_char_timestamp_tz('published_at')} as published_at,
-                    channel
-                FROM raw_data
-                ORDER BY published_at DESC
-                FETCH FIRST 1 ROW ONLY
-            """
+            if id is not None:
+                query = f"""
+                    SELECT
+                        id,
+                        content,
+                        link,
+                        {_to_char_timestamp_tz('published_at')} as published_at,
+                        channel
+                    FROM raw_data
+                    WHERE id = :id
+                """
+                cursor.execute(query, {"id": id})
+            else:
+                query = f"""
+                    SELECT
+                        id,
+                        content,
+                        link,
+                        {_to_char_timestamp_tz('published_at')} as published_at,
+                        channel
+                    FROM raw_data
+                    ORDER BY published_at DESC
+                    FETCH FIRST 1 ROW ONLY
+                """
+                cursor.execute(query)
 
-            cursor.execute(query)
             row = cursor.fetchone()
             cursor.close()
 
