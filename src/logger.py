@@ -6,6 +6,8 @@ JSON 형식으로 출력하여 나중에 분석하기 쉽게 합니다.
 """
 import logging
 import sys
+from datetime import datetime
+from zoneinfo import ZoneInfo
 import structlog
 
 
@@ -30,7 +32,17 @@ def setup_logging(level: str = "INFO"):
     class CustomConsoleRenderer:
         """커스텀 로그 포맷: YYYY-MM-DD HH:MM:SS [level][logger] message"""
 
+        KST = ZoneInfo("Asia/Seoul")
+
         def __call__(self, logger, method_name, event_dict):
+            # datetime 객체를 KST 문자열로 변환
+            for key, value in list(event_dict.items()):
+                if isinstance(value, datetime):
+                    if value.tzinfo is not None:
+                        event_dict[key] = value.astimezone(self.KST).isoformat()
+                    else:
+                        event_dict[key] = value.isoformat()
+
             timestamp = event_dict.pop("timestamp", "")
             level = event_dict.pop("level", "info").upper()
             logger_name = event_dict.pop("logger", "")
@@ -54,7 +66,7 @@ def setup_logging(level: str = "INFO"):
             # 로거 이름 추가
             structlog.stdlib.add_logger_name,
             # 타임스탬프 추가 (간결한 포맷)
-            structlog.processors.TimeStamper(fmt="%Y-%m-%d %H:%M:%S"),
+            structlog.processors.TimeStamper(fmt="%Y-%m-%d %H:%M:%S %z", utc=False),
             # 스택 정보 추가 (에러 발생 시)
             structlog.processors.StackInfoRenderer(),
             # 예외 정보 포매팅
