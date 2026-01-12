@@ -24,10 +24,10 @@ def _parse_iso_timestamp(value: str) -> datetime:
 
 
 class Database:
-    """Oracle Database 연결 관리 클래스"""
+    """Oracle Database 연결 관리 클래스 (Connection Pool 사용)"""
 
     def __init__(self):
-        """Database 초기화 및 연결"""
+        """Database 초기화 및 Connection Pool 생성"""
         self.logger = get_logger(__name__)
 
         # DB 설정 로드
@@ -37,36 +37,43 @@ class Database:
         wallet_location = DB_CONFIG["wallet_location"]
         wallet_password = DB_CONFIG["wallet_password"]
 
-        # 연결 생성
+        # Connection Pool 생성
         try:
-            self.logger.info("Connecting to Oracle database...", dsn=dsn)
+            self.logger.info("Creating Oracle DB Connection Pool...", dsn=dsn)
 
-            self.connection = oracledb.connect(
+            self._pool = oracledb.create_pool(
                 user=username,
                 password=password,
                 dsn=dsn,
                 config_dir=wallet_location,
                 wallet_location=wallet_location,
-                wallet_password=wallet_password
+                wallet_password=wallet_password,
+                min=1,
+                max=2,
+                increment=1,
             )
 
-            self.logger.info("Database connection successful", dsn=dsn)
+            self.logger.info("Database Connection Pool created", dsn=dsn)
 
         except oracledb.Error as e:
             error_obj, = e.args
             self.logger.error(
-                "Failed to connect to database",
+                "Failed to create Connection Pool",
                 error_code=error_obj.code if hasattr(error_obj, 'code') else None,
                 error_message=str(error_obj.message) if hasattr(error_obj, 'message') else str(e)
             )
             raise
         except Exception as e:
             self.logger.error(
-                "Unexpected error during database connection",
+                "Unexpected error during Connection Pool creation",
                 error=str(e),
                 error_type=type(e).__name__
             )
             raise
+
+    def _get_connection(self):
+        """Pool에서 connection 획득"""
+        return self._pool.acquire()
 
     def save_raw_data(self, raw_data: RawData) -> RawData:
         """
@@ -78,8 +85,9 @@ class Database:
         Returns:
             ID가 할당된 RawData
         """
+        connection = self._get_connection()
         try:
-            cursor = self.connection.cursor()
+            cursor = connection.cursor()
 
             # INSERT 쿼리 (RETURNING으로 생성된 ID 받기)
             insert_sql = """
@@ -108,7 +116,7 @@ class Database:
             raw_data.id = generated_id
 
             # 커밋
-            self.connection.commit()
+            connection.commit()
 
             self.logger.debug("원본 데이터 저장 완료", id=raw_data.id, link=raw_data.link)
 
@@ -116,7 +124,10 @@ class Database:
             return raw_data
 
         except oracledb.Error as e:
-            self.connection.rollback()
+            try:
+                connection.rollback()
+            except oracledb.Error:
+                pass  # 연결 끊긴 경우 rollback 무시
             error_obj, = e.args
             self.logger.error(
                 "데이터 저장 실패",
@@ -126,7 +137,10 @@ class Database:
             )
             raise
         except Exception as e:
-            self.connection.rollback()
+            try:
+                connection.rollback()
+            except oracledb.Error:
+                pass
             self.logger.error(
                 "데이터 저장 중 예외 발생",
                 error=str(e),
@@ -134,6 +148,8 @@ class Database:
                 link=raw_data.link
             )
             raise
+        finally:
+            connection.close()  # pool에 반환
 
     def get_latest_raw_data(self) -> RawData:
         """
@@ -145,8 +161,9 @@ class Database:
         Note:
             published_at은 timezone-aware datetime으로 반환됩니다.
         """
+        connection = self._get_connection()
         try:
-            cursor = self.connection.cursor()
+            cursor = connection.cursor()
 
             # TO_CHAR로 타임존 포함 ISO 8601 형식으로 변환
             query = f"""
@@ -192,3 +209,10 @@ class Database:
                 error_message=str(error_obj.message) if hasattr(error_obj, 'message') else str(e)
             )
             raise
+        finally:
+            connection.close()
+
+    def close(self):
+        """Connection Pool 종료"""
+        self._pool.close()
+        self.logger.info("Database Connection Pool 종료")
