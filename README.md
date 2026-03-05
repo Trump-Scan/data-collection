@@ -172,3 +172,45 @@ data-collection/
 |--------|------|
 | **Redis** | Message Queue + State Store |
 | **Oracle DB** | 원본 데이터 저장 |
+
+---
+
+## 🐳 Docker
+
+### Docker Compose 실행 (권장)
+
+Redis와 수집 레이어를 함께 실행합니다.
+
+```bash
+cd data-collection
+
+# .env 파일 생성 (최초 1회)
+cat > .env << 'EOF'
+DB_USERNAME=username
+DB_PASSWORD=password
+DB_DSN=dns
+DB_WALLET_LOCATION=/path/to/wallet/directory
+DB_WALLET_PASSWORD=wallet_password
+EOF
+
+# 실행
+docker compose up --build
+
+# 백그라운드 실행
+docker compose up --build -d
+
+# 종료
+docker compose down
+```
+
+### 볼륨 마운트
+
+| 호스트 경로 | 컨테이너 경로 | 설명 |
+|-------------|---------------|------|
+| Wallet 디렉토리 | `/opt/oracle/wallet` | Oracle Wallet (필수) |
+
+### 참고사항
+
+- Docker Compose 사용 시 `REDIS_HOST`는 자동으로 `redis`로 설정됨
+- `.env` 파일은 gitignore 대상이므로 민감정보를 안전하게 관리 가능
+- config 파일은 이미지에 포함되며, 모든 설정값은 환경변수로 오버라이드 가능

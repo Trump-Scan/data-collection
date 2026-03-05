@@ -1,6 +1,27 @@
-version: '3.8'
-
 services:
+  data-collection:
+    build: .
+    container_name: trump-scan-data-collection
+    environment:
+      # Oracle Database
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_DSN=${DB_DSN}
+      - DB_WALLET_LOCATION=/opt/oracle/wallet
+      - DB_WALLET_PASSWORD=${DB_WALLET_PASSWORD}
+
+      # Redis
+      - REDIS_HOST=redis
+    volumes:
+      # Oracle Wallet (read-only)
+      - ${DB_WALLET_LOCATION}:/opt/oracle/wallet:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - data-collection-network
+
   redis:
     image: redis:7-alpine
     container_name: trump-scan-redis
@@ -15,7 +36,13 @@ services:
       interval: 10s
       timeout: 3s
       retries: 3
+    networks:
+      - data-collection-network
 
 volumes:
   redis_data:
     driver: local
+
+networks:
+  data-collection-network:
+    driver: bridge
