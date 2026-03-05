@@ -8,6 +8,7 @@ import sys
 from src.logger import setup_logging, get_logger
 from src.orchestrator import Orchestrator
 from src.collectors.truth_social import TruthSocialCollector
+from src.collectors.white_house import WhiteHouseCollector
 from src.infrastructure.state_store import StateStore
 from src.infrastructure.database import Database
 from src.infrastructure.message_queue import MessageQueue
@@ -29,6 +30,7 @@ def main():
     # Collector 등록
     collectors = [
         TruthSocialCollector(),
+        WhiteHouseCollector(),
         # NewsCollector(),  # TODO: 향후 추가
     ]
 
