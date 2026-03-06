@@ -49,7 +49,7 @@ class StateStore:
         Returns:
             Checkpoint datetime (없으면 None)
         """
-        key = f"checkpoint:{channel}"
+        key = f"checkpoint:{channel.value}"
         checkpoint_str = self.redis_client.get(key)
 
         if checkpoint_str:
@@ -77,7 +77,7 @@ class StateStore:
             checkpoint = checkpoint.replace(tzinfo=timezone.utc)
             self.logger.warning("Checkpoint에 timezone이 없어 UTC로 설정", channel=channel)
 
-        key = f"checkpoint:{channel}"
+        key = f"checkpoint:{channel.value}"
         checkpoint_str = checkpoint.isoformat()
         self.redis_client.set(key, checkpoint_str)
         self.logger.debug("Checkpoint 저장", channel=channel, checkpoint=checkpoint)
